@@ -5,6 +5,12 @@ use std::io::Write;
 use std::path::Path;
 
 #[derive(Parser)]
+struct ShellCli {
+    #[arg(short)]
+    command: String,
+}
+
+#[derive(Parser)]
 struct Cli {
     #[command(subcommand)]
     command: Commands,
@@ -18,14 +24,14 @@ enum Commands {
         #[arg(long)]
         name: String,
         /// Section of the repo (used in cgit)
-        #[arg(long, default_value = "")]
-        section: String,
+        #[arg(long, default_value = "", num_args = 1..)]
+        section: Vec<String>,
         /// Detailed description of the repo
-        #[arg(long, default_value = "")]
-        description: String,
+        #[arg(long, default_value = "", num_args = 1..)]
+        description: Vec<String>,
         /// Owner of the repo (used in gitweb or cgit)
-        #[arg(long, default_value = "")]
-        owner: String,
+        #[arg(long, default_value = "", num_args = 1..)]
+        owner: Vec<String>,
     },
     /// Rename repo
     Rename {
@@ -48,21 +54,39 @@ enum Commands {
         #[arg(long)]
         name: String,
         /// Change section of the repo to given value
-        #[arg(long)]
-        section: Option<String>,
+        #[arg(long, num_args = 1..)]
+        section: Option<Vec<String>>,
         /// Change description of the repo to given value
-        #[arg(long)]
-        description: Option<String>,
+        #[arg(long, num_args = 1..)]
+        description: Option<Vec<String>>,
         /// Change owner of the repo to given value
-        #[arg(long)]
-        owner: Option<String>,
+        #[arg(long, num_args = 1..)]
+        owner: Option<Vec<String>>,
     },
     /// List all repos
     List,
 }
 
 fn main() {
-    let cli = Cli::parse();
+    let program_name = std::env::args().nth(0).unwrap();
+    let cmdline = match ShellCli::try_parse() {
+        Ok(shellcli) => {
+            let mut line = shellcli
+                .command
+                .split(" ")
+                .map(|s| s.to_string())
+                .collect::<Vec<String>>();
+            let mut newline = vec![program_name];
+            newline.append(&mut line);
+            newline
+        }
+        Err(_) => {
+            Cli::parse_from([program_name, "--help".to_string()]);
+            return;
+        }
+    };
+
+    let cli = Cli::parse_from(cmdline);
     let home = std::env::var("HOME").expect("Couldn't get $HOME variable");
     let repos = format!("{home}/repos");
     match cli.command {
@@ -78,19 +102,19 @@ fn main() {
                 println!("Repo with that name already exists");
                 return;
             }
-            let owner_conf = format!("\n[gitweb]\n\towner = {}", owner);
+            let owner_conf = format!("\n[gitweb]\n\towner = {}", owner.join(" "));
             let post_update = format!(
                 "#!/bin/sh\nchmod g+w -R {} 2> /dev/null",
                 repo_path.display()
             );
-            let section_conf = format!("section={}", section);
+            let section_conf = format!("section={}", section.join(" "));
             let _repo = match Repository::init_bare(&repo_path) {
                 Ok(repo) => {
                     let mut f = File::create(repo_path.join("config")).unwrap();
                     f.write(&owner_conf.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("description")).unwrap();
-                    f.write(&description.into_bytes()).unwrap();
+                    f.write(&description.join(" ").into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("cgitrc")).unwrap();
                     f.write(&section_conf.into_bytes()).unwrap();
@@ -150,18 +174,18 @@ fn main() {
             }
 
             if let Some(section) = section {
-                let section_conf = format!("section={}", section);
+                let section_conf = format!("section={}", section.join(" "));
                 let mut f = File::create(repo_path.join("cgitrc")).unwrap();
                 f.write(&section_conf.into_bytes()).unwrap();
             }
 
             if let Some(description) = description {
                 let mut f = File::create(repo_path.join("description")).unwrap();
-                f.write(&description.into_bytes()).unwrap();
+                f.write(&description.join(" ").into_bytes()).unwrap();
             }
 
             if let Some(owner) = owner {
-                let owner_conf = format!("\n[gitweb]\n\towner = {}", owner);
+                let owner_conf = format!("\n[gitweb]\n\towner = {}", owner.join(" "));
                 let mut f = File::create(repo_path.join("config")).unwrap();
                 f.write(&owner_conf.into_bytes()).unwrap();
             }
