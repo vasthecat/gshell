@@ -109,12 +109,12 @@ fn main() {
             let old_path = Path::new(&old_path);
             let new_path = format!("{repos}/{newname}.git");
             let new_path = Path::new(&new_path);
-            if new_path.exists() {
-                println!("Repo with new name already exists");
-                return;
-            }
             if !old_path.exists() {
                 println!("Repo with name {oldname} doesn't exist");
+                return;
+            }
+            if new_path.exists() {
+                println!("Repo with new name already exists");
                 return;
             }
             let post_update = format!(
@@ -122,7 +122,7 @@ fn main() {
                 new_path.display()
             );
             std::fs::rename(old_path, new_path).unwrap();
-            let mut f = File::open(new_path.join("hooks/post-update")).unwrap();
+            let mut f = File::create(new_path.join("hooks/post-update")).unwrap();
             f.write(&post_update.into_bytes()).unwrap();
         }
         Commands::Remove { name } => {
