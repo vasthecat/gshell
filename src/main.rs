@@ -124,6 +124,7 @@ fn main() {
             std::fs::rename(old_path, new_path).unwrap();
             let mut f = File::create(new_path.join("hooks/post-update")).unwrap();
             f.write(&post_update.into_bytes()).unwrap();
+            println!("Repo '{oldname}.git' renamed to '{newname}.git'");
         }
         Commands::Remove { name } => {
             let repo_path = format!("{repos}/{name}.git");
@@ -133,6 +134,7 @@ fn main() {
                 return;
             }
             std::fs::remove_dir_all(repo_path).unwrap();
+            println!("Repo '{name}.git' removed");
         }
         Commands::Change {
             name,
@@ -163,6 +165,8 @@ fn main() {
                 let mut f = File::create(repo_path.join("config")).unwrap();
                 f.write(&owner_conf.into_bytes()).unwrap();
             }
+
+            println!("Changed config of '{name}.git' repo");
         }
         Commands::List => unimplemented!(),
     }
