@@ -88,6 +88,27 @@ fn main() {
             };
             println!("Initialized repo '{}.git'", name);
         }
+        Commands::Rename { oldname, newname } => {
+            let old_path = format!("{repos}/{oldname}.git");
+            let old_path = Path::new(&old_path);
+            let new_path = format!("{repos}/{newname}.git");
+            let new_path = Path::new(&new_path);
+            if new_path.exists() {
+                println!("Repo with new name already exists");
+                return;
+            }
+            if !old_path.exists() {
+                println!("Repo with name {oldname} doesn't exist");
+                return;
+            }
+            let post_update = format!(
+                "#!/bin/sh\nchmod g+w -R {} 2> /dev/null",
+                new_path.display()
+            );
+            std::fs::rename(old_path, new_path).unwrap();
+            let mut f = File::open(new_path.join("hooks/post-update")).unwrap();
+            f.write(&post_update.into_bytes()).unwrap();
+        }
         _ => {}
     }
 }
