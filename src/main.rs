@@ -36,11 +36,11 @@ enum Commands {
         #[arg(long)]
         name: String,
         #[arg(long)]
-        section: String,
+        section: Option<String>,
         #[arg(long)]
-        description: String,
+        description: Option<String>,
         #[arg(long)]
-        owner: String,
+        owner: Option<String>,
     },
     List,
 }
@@ -117,6 +117,36 @@ fn main() {
                 return;
             }
             std::fs::remove_dir_all(repo_path).unwrap();
+        }
+        Commands::Change {
+            name,
+            section,
+            description,
+            owner,
+        } => {
+            let repo_path = format!("{repos}/{name}.git");
+            let repo_path = Path::new(&repo_path);
+            if !repo_path.exists() {
+                println!("Repo with that name doesn't exist");
+                return;
+            }
+
+            if let Some(section) = section {
+                let section_conf = format!("section={}", section);
+                let mut f = File::create(repo_path.join("cgitrc")).unwrap();
+                f.write(&section_conf.into_bytes()).unwrap();
+            }
+
+            if let Some(description) = description {
+                let mut f = File::create(repo_path.join("description")).unwrap();
+                f.write(&description.into_bytes()).unwrap();
+            }
+
+            if let Some(owner) = owner {
+                let owner_conf = format!("\n[gitweb]\n\towner = {}", owner);
+                let mut f = File::create(repo_path.join("config")).unwrap();
+                f.write(&owner_conf.into_bytes()).unwrap();
+            }
         }
         _ => {}
     }
