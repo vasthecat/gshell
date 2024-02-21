@@ -148,6 +148,6 @@ fn main() {
                 f.write(&owner_conf.into_bytes()).unwrap();
             }
         }
-        _ => {}
+        Commands::List => unimplemented!(),
     }
 }
