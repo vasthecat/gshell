@@ -12,36 +12,52 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Commands {
+    /// Initialize repo with optional section, description or owner
     Init {
+        /// Name of the new repo (this should be unique)
         #[arg(long)]
         name: String,
+        /// Section of the repo (used in cgit)
         #[arg(long, default_value = "")]
         section: String,
+        /// Detailed description of the repo
         #[arg(long, default_value = "")]
         description: String,
+        /// Owner of the repo (used in gitweb or cgit)
         #[arg(long, default_value = "")]
         owner: String,
     },
+    /// Rename repo
     Rename {
+        /// Name of the repo to be renamed
         #[arg(long)]
         oldname: String,
+        /// New name of the repo (should be unique)
         #[arg(long)]
         newname: String,
     },
+    /// Remove repo
     Remove {
+        /// Name of the repo to be removed
         #[arg(long)]
         name: String,
     },
+    /// Change section, description or owner of a given repo
     Change {
+        /// Name of the repo (mandatory field)
         #[arg(long)]
         name: String,
+        /// Change section of the repo to given value
         #[arg(long)]
         section: Option<String>,
+        /// Change description of the repo to given value
         #[arg(long)]
         description: Option<String>,
+        /// Change owner of the repo to given value
         #[arg(long)]
         owner: Option<String>,
     },
+    /// List all repos
     List,
 }
 
