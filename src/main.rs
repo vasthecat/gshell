@@ -109,6 +109,15 @@ fn main() {
             let mut f = File::open(new_path.join("hooks/post-update")).unwrap();
             f.write(&post_update.into_bytes()).unwrap();
         }
+        Commands::Remove { name } => {
+            let repo_path = format!("{repos}/{name}.git");
+            let repo_path = Path::new(&repo_path);
+            if !repo_path.exists() {
+                println!("Repo with that name doesn't exist");
+                return;
+            }
+            std::fs::remove_dir_all(repo_path).unwrap();
+        }
         _ => {}
     }
 }
