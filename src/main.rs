@@ -71,16 +71,16 @@ fn main() {
             let _repo = match Repository::init_bare(&repo_path) {
                 Ok(repo) => {
                     let mut f = File::create(repo_path.join("config")).unwrap();
-                    let _ = f.write(&owner_conf.into_bytes());
+                    f.write(&owner_conf.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("description")).unwrap();
-                    let _ = f.write(&description.into_bytes());
+                    f.write(&description.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("cgitrc")).unwrap();
-                    let _ = f.write(&section_conf.into_bytes());
+                    f.write(&section_conf.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("hooks/post-update")).unwrap();
-                    let _ = f.write(&post_update.into_bytes());
+                    f.write(&post_update.into_bytes()).unwrap();
 
                     repo
                 }
