@@ -2,7 +2,9 @@ use clap::{Parser, Subcommand};
 use git2::Repository;
 use std::fs::File;
 use std::io::Write;
+use std::os::unix::process::CommandExt;
 use std::path::Path;
+use std::process::Command;
 
 #[derive(Parser)]
 struct ShellCli {
@@ -65,6 +67,8 @@ enum Commands {
     },
     /// List all repos
     List,
+    #[clap(external_subcommand)]
+    External(Vec<String>),
 }
 
 fn main() {
@@ -76,7 +80,7 @@ fn main() {
                 .split(" ")
                 .map(|s| s.to_string())
                 .collect::<Vec<String>>();
-            let mut newline = vec![program_name];
+            let mut newline = vec![program_name.clone()];
             newline.append(&mut line);
             newline
         }
@@ -193,5 +197,16 @@ fn main() {
             println!("Changed config of '{name}.git' repo");
         }
         Commands::List => unimplemented!(),
+        Commands::External(opts) => {
+            if !["git-receive-pack", "git-upload-pack", "git-upload-archive"]
+                .contains(&opts[0].as_str())
+            {
+                Cli::parse_from([program_name, "--help".to_string()]);
+                return;
+            }
+
+            let args = opts[1..].iter().map(|s| s.trim_matches(['\'', '"']));
+            Command::new(opts[0].clone()).args(args).exec();
+        }
     }
 }
