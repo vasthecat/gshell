@@ -72,12 +72,12 @@ enum Commands {
 }
 
 fn main() {
-    let program_name = std::env::args().nth(0).unwrap();
+    let program_name = std::env::args().next().unwrap();
     let cmdline = match ShellCli::try_parse() {
         Ok(shellcli) => {
             let mut line = shellcli
                 .command
-                .split(" ")
+                .split(' ')
                 .map(|s| s.to_string())
                 .collect::<Vec<String>>();
             let mut newline = vec![program_name.clone()];
@@ -112,19 +112,19 @@ fn main() {
                 repo_path.display()
             );
             let section_conf = format!("section={}", section.join(" "));
-            let _repo = match Repository::init_bare(&repo_path) {
+            let _repo = match Repository::init_bare(repo_path) {
                 Ok(repo) => {
                     let mut f = File::create(repo_path.join("config")).unwrap();
-                    f.write(&owner_conf.into_bytes()).unwrap();
+                    f.write_all(&owner_conf.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("description")).unwrap();
-                    f.write(&description.join(" ").into_bytes()).unwrap();
+                    f.write_all(&description.join(" ").into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("cgitrc")).unwrap();
-                    f.write(&section_conf.into_bytes()).unwrap();
+                    f.write_all(&section_conf.into_bytes()).unwrap();
 
                     let mut f = File::create(repo_path.join("hooks/post-update")).unwrap();
-                    f.write(&post_update.into_bytes()).unwrap();
+                    f.write_all(&post_update.into_bytes()).unwrap();
 
                     repo
                 }
@@ -151,7 +151,7 @@ fn main() {
             );
             std::fs::rename(old_path, new_path).unwrap();
             let mut f = File::create(new_path.join("hooks/post-update")).unwrap();
-            f.write(&post_update.into_bytes()).unwrap();
+            f.write_all(&post_update.into_bytes()).unwrap();
             println!("Repo '{oldname}.git' renamed to '{newname}.git'");
         }
         Commands::Remove { name } => {
@@ -180,18 +180,18 @@ fn main() {
             if let Some(section) = section {
                 let section_conf = format!("section={}", section.join(" "));
                 let mut f = File::create(repo_path.join("cgitrc")).unwrap();
-                f.write(&section_conf.into_bytes()).unwrap();
+                f.write_all(&section_conf.into_bytes()).unwrap();
             }
 
             if let Some(description) = description {
                 let mut f = File::create(repo_path.join("description")).unwrap();
-                f.write(&description.join(" ").into_bytes()).unwrap();
+                f.write_all(&description.join(" ").into_bytes()).unwrap();
             }
 
             if let Some(owner) = owner {
                 let owner_conf = format!("\n[gitweb]\n\towner = {}", owner.join(" "));
                 let mut f = File::create(repo_path.join("config")).unwrap();
-                f.write(&owner_conf.into_bytes()).unwrap();
+                f.write_all(&owner_conf.into_bytes()).unwrap();
             }
 
             println!("Changed config of '{name}.git' repo");
